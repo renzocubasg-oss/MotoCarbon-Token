@@ -1,0 +1,13 @@
+{
+  "name": "motocarbon-token",
+  "version": "1.0.0",
+  "description": "Blockchain project for carbon tokenization of electric mototaxis",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "node scripts/deploy.js"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0"
+  }
+}
