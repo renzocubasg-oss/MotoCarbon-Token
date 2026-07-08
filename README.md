@@ -22,3 +22,40 @@ MotoCarbon Token es una solución basada en Blockchain que registra el CO₂ evi
 - python-simulation/
 - contracts/
 - docs/
+# MotoCarbon Token
+
+Proyecto desarrollado para la Hackathon de Tokenización de Carbono.
+
+## Descripción
+
+MotoCarbon Token propone un sistema basado en Blockchain para registrar el CO₂ evitado por mototaxis eléctricas y recompensar a los conductores mediante tokens ambientales.
+
+## Tecnologías utilizadas
+
+- Python
+- Pandas
+- Matplotlib
+- Solidity
+- GitHub
+
+## Estructura del proyecto
+
+```
+MotoCarbon-Token/
+│
+├── contracts/
+│   └── MotoCarbonToken.sol
+│
+├── python-simulation/
+│   └── MotoCarbonSimulation.py
+│
+└── README.md
+```
+
+## Equipo
+
+Carbon Mobility Team – UNMSM
+
+## Estado del proyecto
+
+En desarrollo.
