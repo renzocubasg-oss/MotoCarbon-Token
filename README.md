@@ -64,6 +64,10 @@ MotoCarbon-Token/
 ├── scripts/
 │   └── deploy.js
 │
+├── python-simulation/
+│   ├── MotoCarbonSimulation.py
+│   └── motocarbon token.png
+│
 ├── web-app/
 │   └── index.html
 │
