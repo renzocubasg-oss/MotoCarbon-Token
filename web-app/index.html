@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotoCarbon Token - Simulator</title>
+
+    <style>
+        :root {
+            --accent: #a855f7;
+            --accent-hover: #9333ea;
+            --accent-soft: rgba(168, 85, 247, 0.15);
+            --accent-shadow: rgba(168, 85, 247, 0.25);
+            --background: #0b1120;
+            --phone-bg: #101827;
+            --card-bg: #1e293b;
+            --input-bg: #0f172a;
+            --border: #334155;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --text-soft: #cbd5e1;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--background);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .phone {
+            width: 360px;
+            max-width: 94vw;
+            height: 92vh;
+            background: var(--phone-bg);
+            border: 8px solid #1f2937;
+            border-radius: 35px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: 0 0 45px var(--accent-shadow);
+        }
+
+        .phone::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .phone::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        .status-bar {
+            height: 35px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 18px;
+            font-size: 12px;
+            color: var(--text-soft);
+            background: #020617;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .app {
+            padding: 20px;
+        }
+
+        .title {
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        .title h1 {
+            font-size: 28px;
+            margin: 0;
+            color: var(--accent);
+        }
+
+        .title p {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .card h2 {
+            margin: 0 0 12px 0;
+            font-size: 17px;
+            color: #e2e8f0;
+        }
+
+        .info {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.7;
+        }
+
+        .balance {
+            font-size: 38px;
+            font-weight: bold;
+            color: var(--accent);
+            margin: 10px 0;
+        }
+
+        .label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: white;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: var(--accent);
+            color: #020617;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: var(--accent-hover);
+        }
+
+        .secondary-button {
+            background: #38bdf8;
+            margin-top: 12px;
+        }
+
+        .secondary-button:hover {
+            background: #0ea5e9;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .metric {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .metric-number {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--accent);
+        }
+
+        .metric-text {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+
+        .history {
+            margin-top: 12px;
+            max-height: 190px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: var(--input-bg);
+            border-left: 4px solid var(--accent);
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: var(--text-soft);
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success {
+            background: var(--accent-soft);
+            border: 1px solid var(--accent);
+            color: #f3e8ff;
+            padding: 12px;
+            border-radius: 14px;
+            font-size: 13px;
+            margin-top: 12px;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #64748b;
+            margin-top: 18px;
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="phone">
+        <div class="status-bar">
+            <span>19:30</span>
+            <span>●●● WiFi 🔋</span>
+        </div>
+
+        <div class="app">
+
+            <div class="title">
+                <h1>MotoCarbon Token</h1>
+                <p>CO₂ avoidance tokenization simulator for electric mototaxis</p>
+            </div>
+
+            <div id="login-screen" class="card">
+                <h2>Welcome</h2>
+                <p class="info">
+                    This platform allows users to register trips made by electric mototaxis,
+                    calculate avoided CO₂, and generate MotoCarbon Tokens as digital evidence.
+                </p>
+                <button onclick="connectWallet()">Connect mock wallet</button>
+            </div>
+
+            <div id="dashboard-screen" class="hidden">
+
+                <div class="card">
+                    <span class="label">Connected driver</span>
+                    <h2>Driver 001</h2>
+                    <div class="info">
+                        Vehicle: MCT-001 <br>
+                        District: San Juan de Miraflores <br>
+                        Wallet: 0x5B38...eddC4
+                    </div>
+                </div>
+
+                <div class="card">
+                    <span class="label">Token balance</span>
+                    <div class="balance"><span id="tokenBalance">0</span> MCT</div>
+                    <p class="info">Tokens generated by registered electric trips.</p>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric">
+                        <div class="metric-number" id="totalTrips">0</div>
+                        <div class="metric-text">Recorded trips</div>
+                    </div>
+
+                    <div class="metric">
+                        <div class="metric-number" id="totalCO2">0 g</div>
+                        <div class="metric-text">CO₂ avoided</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>Register electric trip</h2>
+
+                    <label class="label">Distance traveled (km)</label>
+                    <input type="number" id="distanceInput" value="12">
+
+                    <label class="label">Route</label>
+                    <input type="text" id="routeInput" value="San Juan de Miraflores - Villa María del Triunfo">
+
+                    <button onclick="registerTrip()">Register trip</button>
+
+                    <div id="successMessage" class="success hidden"></div>
+                </div>
+
+                <div class="card">
+                    <h2>Simulated blockchain history</h2>
+                    <div id="history" class="history">
+                        <p class="info">No trips have been recorded yet.</p>
+                    </div>
+                </div>
+
+                <button class="secondary-button" onclick="resetDemo()">Reset demo</button>
+
+                <div class="footer">
+                    Reference smart contract: MotoCarbonToken.sol | Token: MCT
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let connected = false;
+        let tokenBalance = 0;
+        let totalCO2 = 0;
+        let totalTrips = 0;
+
+        const gasolineEmissionFactor = 70;
+        const electricEmissionFactor = 15;
+
+        function connectWallet() {
+            connected = true;
+
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("dashboard-screen").classList.remove("hidden");
+        }
+
+        function registerTrip() {
+            let distance = Number(document.getElementById("distanceInput").value);
+            let route = document.getElementById("routeInput").value;
+
+            if (distance <= 0 || route.trim() === "") {
+                alert("Please enter a valid distance and route.");
+                return;
+            }
+
+            let co2AvoidedPerKm = gasolineEmissionFactor - electricEmissionFactor;
+            let co2Avoided = distance * co2AvoidedPerKm;
+            let tokensIssued = co2Avoided;
+
+            tokenBalance += tokensIssued;
+            totalCO2 += co2Avoided;
+            totalTrips += 1;
+
+            document.getElementById("tokenBalance").innerText = tokenBalance;
+            document.getElementById("totalCO2").innerText = totalCO2 + " g";
+            document.getElementById("totalTrips").innerText = totalTrips;
+
+            let message = "Trip successfully recorded. CO₂ avoided: " + co2Avoided + " g | Tokens generated: " + tokensIssued + " MCT";
+            document.getElementById("successMessage").innerText = message;
+            document.getElementById("successMessage").classList.remove("hidden");
+
+            let history = document.getElementById("history");
+
+            if (totalTrips === 1) {
+                history.innerHTML = "";
+            }
+
+            let item = document.createElement("div");
+            item.className = "history-item";
+            item.innerHTML =
+                "<strong>Trip " + totalTrips + "</strong><br>" +
+                "Route: " + route + "<br>" +
+                "Distance: " + distance + " km<br>" +
+                "CO₂ avoided: " + co2Avoided + " g<br>" +
+                "Tokens issued: +" + tokensIssued + " MCT<br>" +
+                "Status: Recorded on simulated blockchain";
+
+            history.prepend(item);
+        }
+
+        function resetDemo() {
+            tokenBalance = 0;
+            totalCO2 = 0;
+            totalTrips = 0;
+
+            document.getElementById("tokenBalance").innerText = "0";
+            document.getElementById("totalCO2").innerText = "0 g";
+            document.getElementById("totalTrips").innerText = "0";
+            document.getElementById("history").innerHTML = '<p class="info">No trips have been recorded yet.</p>';
+            document.getElementById("successMessage").classList.add("hidden");
+        }
+    </script>
+
+</body>
+</html>
