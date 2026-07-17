@@ -160,3 +160,9 @@ Este repositorio contiene el Smart Contract desarrollado en Solidity junto con u
 **Carbon Mobility Team**
 
 Universidad Nacional Mayor de San Marcos (UNMSM)
+
+## Web Application Preview
+
+The project includes a web prototype that simulates the interaction with the MotoCarbon Token platform.
+
+![MotoCarbon Web App](web-app/app-preview.png)
