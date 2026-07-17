@@ -193,6 +193,6 @@ National University of San Marcos (UNMSM)
 
 The project includes a web prototype that simulates the interaction with the MotoCarbon Token platform.
 
-![MotoCarbon Web App](web-app/app-preview.png)
+![Blockchain History](web-app/blockchain-history.png)
 
 The web application simulates wallet connection, electric trip registration, CO₂ avoidance calculation, MotoCarbon Token generation, and blockchain transaction history visualization.
