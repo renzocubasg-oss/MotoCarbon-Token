@@ -1,7 +1,7 @@
 {
   "name": "motocarbon-token",
-  "version": "1.0.0",
-  "description": "Blockchain project for carbon tokenization of electric mototaxis",
+  "version": "1.1.0",
+  "description": "Blockchain-based platform for carbon tokenization of electric mototaxis with an interactive web application.",
   "scripts": {
     "compile": "hardhat compile",
     "deploy": "node scripts/deploy.js"
