@@ -1,85 +1,202 @@
-# ==============================================================================
-# PROYECTO: MotoCarbon Token - Simulación de Impacto Ambiental (Python)
-# EQUIPO: Carbon Mobility Team - UNMSM
-# COMPONENTE: /python-simulation
-# ==============================================================================
-
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime
 
-# 1. DEFINICIÓN DE FACTORES DE EMISIÓN (Metodología Basada en GSA/MINAM)
-# Factor promedio estimado de emisión para una mototaxi convencional a gasolina:
-# Se calcula en gramos de CO2 por kilómetro recorrido (g CO2 / km)
-FACTOR_GASOLINA_G_KM = 120.0  # Ejemplo: 120g de CO2 por km recorrido
-FACTOR_ELECTRICO_G_KM = 0.0    # Moto eléctrica (cero emisiones directas en ruta)
+# =====================================================================
+# CONSTANTES DE EMISIÓN
+# =====================================================================
+EMISION_GASOLINA_POR_KM = 120  # gramos de CO2
+EMISION_ELECTRICA_POR_KM = 0   # gramos de CO2
+CO2_KG_A_TOKEN_FACTOR = 1.0    # 1 kg evitado = 1 Token
 
-# Relación de Tokenización: Cantidad de CO2 evitado necesaria para generar 1 MotoCarbon Token
-# Ejemplo: 1 Token por cada 1000 gramos (1 kg) de CO2 evitado
-CO2_GRAMOS_POR_TOKEN = 1000.0
+# =====================================================================
+# SIMULACIÓN DE LA BLOCKCHAIN
+# =====================================================================
+class BlockchainSimulada:
+    def __init__(self):
+        self.ledger = {}
 
-# 2. BASE DE DATOS SIMULADA (Viajes realizados por mototaxis eléctricas)
-datos_viajes = {
-    'id_viaje': [101, 102, 103, 104, 105, 106],
-    'conductor': ['Michaell Santiago', 'Juan Perez', 'Michaell Santiago', 'Ana Gomez', 'Juan Perez', 'Ana Gomez'],
-    'distrito': ['Villa El Salvador', 'San Juan de Miraflores', 'Villa El Salvador', 'Villa María del Triunfo', 'San Juan de Miraflores', 'Villa María del Triunfo'],
-    'km_recorridos': [15.5, 22.0, 12.3, 30.5, 18.2, 25.0]
-}
+    def registrarViaje(self, id_viaje, conductor, distrito, kilometros, co2_evitado_g, tokens):
+        if id_viaje in self.ledger:
+            print(f"\n⚠️ ERROR BLOCKCHAIN: El ID de viaje '{id_viaje}' ya fue registrado.")
+            return False
+        
+        self.ledger[id_viaje] = {
+            "ID": id_viaje,
+            "Conductor": conductor,
+            "Distrito": distrito,
+            "Kilómetros": kilometros,
+            "CO2_Evitado_g": co2_evitado_g,
+            "Tokens": tokens,
+            "FechaRegistro": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        print(f"\n⛓️ [Blockchain] ¡Éxito! Viaje #{id_viaje} grabado de forma inmutable.")
+        print(f"   Generados: {tokens:.2f} MotoCarbon Tokens (MCT).")
+        return True
 
-# Crear el DataFrame principal con Pandas
-df_viajes = pd.DataFrame(datos_viajes)
+    def obtenerViaje(self, id_viaje):
+        return self.ledger.get(id_viaje, None)
 
-# 3. LÓGICA DE CÁLCULO AMBIENTAL
-# Cálculo del CO2 que habría emitido una mototaxi a gasolina en esa misma distancia
-df_viajes['co2_gasolina_g'] = df_viajes['km_recorridos'] * FACTOR_GASOLINA_G_KM
+    def obtenerTodosLosViajes(self):
+        # Convierte el ledger en una lista apta para Pandas
+        lista_viajes = []
+        for v in self.ledger.values():
+            lista_viajes.append({
+                "ID": v["ID"],
+                "Conductor": v["Conductor"],
+                "Distrito": v["Distrito"],
+                "Kilómetros": v["Kilómetros"],
+                "CO2_Evitado_kg": v["CO2_Evitado_g"] / 1000.0,
+                "Tokens": v["Tokens"],
+                "Fecha": v["FechaRegistro"]
+            })
+        return lista_viajes
 
-# Cálculo del CO2 de la mototaxi eléctrica
-df_viajes['co2_electrico_g'] = df_viajes['km_recorridos'] * FACTOR_ELECTRICO_G_KM
 
-# CO2 Evitado = CO2 Gasolina - CO2 Eléctrico (en gramos y convertido a kilogramos)
-df_viajes['co2_evitado_g'] = df_viajes['co2_gasolina_g'] - df_viajes['co2_electrico_g']
-df_viajes['co2_evitado_kg'] = df_viajes['co2_evitado_g'] / 1000.0
+# =====================================================================
+# FUNCIONES DE LA APLICACIÓN INTERACTIVA
+# =====================================================================
+def mostrar_menu():
+    print("\n" + "="*40)
+    print("      SISTEMA MOTOCARBON TOKEN (MCT)     ")
+    print("="*40)
+    print("1. Registrar un nuevo viaje")
+    print("2. Consultar un viaje por ID (Blockchain)")
+    print("3. Ver reportes actuales (Pandas)")
+    print("4. Generar gráficos de impacto (Matplotlib)")
+    print("5. Salir")
+    print("="*40)
 
-# Cálculo de MotoCarbon Tokens generados (Proporcional al CO2 evitado)
-df_viajes['tokens_generados'] = df_viajes['co2_evitado_g'] / CO2_GRAMOS_POR_TOKEN
+def solicitar_viaje(blockchain):
+    print("\n--- REGISTRAR NUEVO VIAJE ---")
+    try:
+        id_viaje = int(input("Ingrese el ID único del viaje (ej. 101): "))
+        if blockchain.obtenerViaje(id_viaje) is not None:
+            print("⚠️ Este ID ya existe en la Blockchain. Intente con otro.")
+            return
 
-print("--- REGISTRO DE TRAZABILIDAD DE VIAJES PROCESADO ---")
-print(df_viajes[['id_viaje', 'conductor', 'distrito', 'km_recorridos', 'co2_evitado_kg', 'tokens_generados']])
-print("-" * 60)
+        conductor = input("Nombre del conductor: ").strip().title()
+        if not conductor:
+            print("⚠️ El nombre no puede estar vacío.")
+            return
 
-# 4. AGRUPACIÓN Y REPORTES ACUMULADOS (Pandas)
-# Impacto total acumulado por cada conductor
-reporte_conductores = df_viajes.groupby('conductor')[['km_recorridos', 'co2_evitado_kg', 'tokens_generados']].sum().reset_index()
+        distrito = input("Distrito del viaje: ").strip().title()
+        if not distrito:
+            print("⚠️ El distrito no puede estar vacío.")
+            return
 
-# Impacto total acumulado por distrito de Lima Sur
-reporte_distritos = df_viajes.groupby('distrito')[['co2_evitado_kg']].sum().reset_index()
+        km = float(input("Kilómetros recorridos: "))
+        if km <= 0:
+            print("⚠️ Los kilómetros deben ser mayores a 0.")
+            return
+        
+        # 3. Cálculos de CO2 Evitado
+        co2_gasolina = km * EMISION_GASOLINA_POR_KM
+        co2_electrica = km * EMISION_ELECTRICA_POR_KM
+        co2_evitado_gramos = co2_gasolina - co2_electrica
+        co2_evitado_kg = co2_evitado_gramos / 1000.0
+        
+        # 4. Generar Tokens
+        tokens_generados = co2_evitado_kg * CO2_KG_A_TOKEN_FACTOR
 
-print("\n--- RESUMEN DE IMPACTO POR CONDUCTOR ---")
-print(reporte_conductores)
+        # Enviar a la Blockchain simulada
+        blockchain.registrarViaje(id_viaje, conductor, distrito, km, co2_evitado_gramos, tokens_generados)
 
-# 5. VISUALIZACIÓN GRÁFICA (Matplotlib)
-plt.style.use('seaborn-v0_8-whitegrid') # Estilo limpio para la presentación
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+    except ValueError:
+        print("⚠️ Entrada inválida. Asegúrese de ingresar números donde se solicita.")
 
-# Gráfico 1: CO2 Evitado por Conductor (en KG)
-ax1.bar(reporte_conductores['conductor'], reporte_conductores['co2_evitado_kg'], color='#2ecc71', edgecolor='black')
-ax1.set_title('Impacto Ambiental: CO₂ Evitado por Conductor', fontsize=12, fontweight='bold')
-ax1.set_xlabel('Conductor')
-ax1.set_ylabel('CO₂ Evitado (Kilogramos)')
-for i, v in enumerate(reporte_conductores['co2_evitado_kg']):
-    ax1.text(i, v + 0.1, f"{v:.2f} kg", ha='center', fontweight='bold')
+def consultar_blockchain(blockchain):
+    print("\n--- CONSULTAR VIAJE INMUTABLE ---")
+    try:
+        id_viaje = int(input("Ingrese el ID del viaje a buscar: "))
+        viaje = blockchain.obtenerViaje(id_viaje)
+        if viaje:
+            print("\n✅ Datos recuperados de la Blockchain:")
+            print(f"  • ID: {viaje['ID']}")
+            print(f"  • Conductor: {viaje['Conductor']}")
+            print(f"  • Distrito: {viaje['Distrito']}")
+            print(f"  • Distancia: {viaje['Kilómetros']} km")
+            print(f"  • CO2 Evitado: {viaje['CO2_Evitado_g']/1000.0:.2f} kg")
+            print(f"  • Tokens MCT: {viaje['Tokens']:.2f}")
+            print(f"  • Timestamp Blockchain: {viaje['FechaRegistro']}")
+        else:
+            print("❌ El viaje con ese ID no existe en el registro.")
+    except ValueError:
+        print("⚠️ ID inválido.")
 
-# Gráfico 2: CO2 Evitado por Distrito de Lima Sur
-ax2.bar(reporte_distritos['distrito'], reporte_distritos['co2_evitado_kg'], color='#3498db', edgecolor='black')
-ax2.set_title('Descarbonización Urbana: CO₂ Evitado por Distrito', fontsize=12, fontweight='bold')
-ax2.set_xlabel('Distrito')
-ax2.set_ylabel('CO₂ Evitado (Kilogramos)')
-plt.xticks(rotation=15)
-for i, v in enumerate(reporte_distritos['co2_evitado_kg']):
-    ax2.text(i, v + 0.1, f"{v:.2f} kg", ha='center', fontweight='bold')
+def generar_reportes(blockchain):
+    viajes = blockchain.obtenerTodosLosViajes()
+    if not viajes:
+        print("\n📭 No hay datos registrados para generar reportes aún.")
+        return
 
-plt.tight_layout()
-plt.suptitle('MotoCarbon Token - Simulación de Resultados Funcionales', fontsize=14, fontweight='bold', y=1.02)
+    df = pd.DataFrame(viajes)
+    print("\n## REPORTE DE PASAJES Y MÉTRICAS (PANDAS) ##")
+    
+    print("\n[Métrica 1] CO2 Evitado y Tokens por Conductor:")
+    rep_conductor = df.groupby("Conductor")[["CO2_Evitado_kg", "Tokens"]].sum()
+    print(rep_conductor.to_string())
 
-# Guardar gráfico para usarlo en la documentación o diapositivas
-plt.savefig('impacto_ambiental_motocarbon.png', dpi=300, bbox_inches='tight')
-plt.show()
+    print("\n[Métrica 2] CO2 Evitado por Distrito:")
+    rep_distrito = df.groupby("Distrito")[["CO2_Evitado_kg", "Tokens"]].sum()
+    print(rep_distrito.to_string())
+
+def mostrar_graficos(blockchain):
+    viajes = blockchain.obtenerTodosLosViajes()
+    if not viajes:
+        print("\n📭 No hay datos registrados para graficar. Registre viajes primero.")
+        return
+
+    df = pd.DataFrame(viajes)
+    rep_conductor = df.groupby("Conductor")["Tokens"].sum()
+    rep_distrito = df.groupby("Distrito")["CO2_Evitado_kg"].sum()
+
+    # Crear interfaz de gráficos
+    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+    # Gráfico Conductor
+    rep_conductor.plot(kind="bar", ax=axes[0], color="mediumseagreen", edgecolor="black")
+    axes[0].set_title("Tokens MCT por Conductor")
+    axes[0].set_ylabel("Tokens")
+    axes[0].set_xlabel("Conductor")
+    axes[0].grid(axis="y", linestyle="--", alpha=0.5)
+
+    # Gráfico Distrito
+    rep_distrito.plot(kind="bar", ax=axes[1], color="skyblue", edgecolor="black")
+    axes[1].set_title("CO2 Evitado por Distrito (KG)")
+    axes[1].set_ylabel("Kilogramos")
+    axes[1].set_xlabel("Distrito")
+    axes[1].grid(axis="y", linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+    print("\n📊 Abriendo ventana de gráficos... (Ciérrala para continuar en la terminal)")
+    plt.show()
+
+# =====================================================================
+# FLUJO PRINCIPAL DEL PROGRAMA
+# =====================================================================
+def ejecutar_programa():
+    # Inicializar la Blockchain vacía
+    mi_blockchain = BlockchainSimulada()
+    
+    while True:
+        mostrar_menu()
+        opcion = input("Seleccione una opción (1-5): ").strip()
+        
+        if opcion == "1":
+            solicitar_viaje(mi_blockchain)
+        elif opcion == "2":
+            consultar_blockchain(mi_blockchain)
+        elif opcion == "3":
+            generar_reportes(mi_blockchain)
+        elif opcion == "4":
+            mostrar_graficos(mi_blockchain)
+        elif opcion == "5":
+            print("\n🌱 Gracias por usar MotoCarbon Token. ¡Cuidemos el planeta!")
+            break
+        else:
+            print("⚠️ Opción inválida. Intente de nuevo.")
+
+# Ejecutar la aplicación
+if __name__ == "__main__":
+    ejecutar_programa()
