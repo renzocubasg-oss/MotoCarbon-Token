@@ -3,82 +3,170 @@ pragma solidity ^0.8.20;
 
 contract MotoCarbonToken {
 
-    struct Viaje {
-        uint256 idViaje;
-        string conductor;
-        string distrito;
-        uint256 kmRecorridos;
-        uint256 co2Evitado;
-        uint256 tokensGenerados;
-        uint256 fechaRegistro;
+    string public projectName = "MotoCarbon Token";
+    string public tokenSymbol = "MCT";
+
+    address public owner;
+
+    uint256 public gasolineEmissionFactor = 70;
+    uint256 public electricEmissionFactor = 15;
+
+    uint256 public totalTrips;
+    uint256 public totalCO2Avoided;
+    uint256 public totalTokensIssued;
+    uint256 public totalTokensRetired;
+
+    struct Driver {
+        string name;
+        string vehicleId;
+        string district;
+        bool registered;
     }
 
-    mapping(uint256 => Viaje) private viajes;
+    struct Trip {
+        uint256 tripId;
+        address driver;
+        uint256 distanceKm;
+        uint256 co2Avoided;
+        uint256 tokensIssued;
+        string route;
+        uint256 timestamp;
+    }
 
-    uint256 public totalViajes;
+    mapping(address => Driver) public drivers;
+    mapping(uint256 => Trip) public trips;
+    mapping(address => uint256) public balances;
 
-    event ViajeRegistrado(
-        uint256 idViaje,
-        string conductor,
-        string distrito,
-        uint256 co2Evitado,
-        uint256 tokensGenerados
+    event DriverRegistered(
+        address indexed driver,
+        string name,
+        string vehicleId,
+        string district
     );
 
-    function registrarViaje(
-        uint256 _idViaje,
-        string memory _conductor,
-        string memory _distrito,
-        uint256 _kmRecorridos,
-        uint256 _co2Evitado,
-        uint256 _tokensGenerados
-    ) public {
+    event TripRegistered(
+        uint256 indexed tripId,
+        address indexed driver,
+        uint256 distanceKm,
+        uint256 co2Avoided,
+        uint256 tokensIssued
+    );
 
-        viajes[_idViaje] = Viaje({
-            idViaje: _idViaje,
-            conductor: _conductor,
-            distrito: _distrito,
-            kmRecorridos: _kmRecorridos,
-            co2Evitado: _co2Evitado,
-            tokensGenerados: _tokensGenerados,
-            fechaRegistro: block.timestamp
-        });
+    event TokensRetired(
+        address indexed user,
+        uint256 amount,
+        string reason
+    );
 
-        totalViajes++;
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can execute this function");
+        _;
+    }
 
-        emit ViajeRegistrado(
-            _idViaje,
-            _conductor,
-            _distrito,
-            _co2Evitado,
-            _tokensGenerados
+    modifier onlyRegisteredDriver(address driverAddress) {
+        require(drivers[driverAddress].registered == true, "Driver is not registered");
+        _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function registerDriver(
+        address driverAddress,
+        string memory name,
+        string memory vehicleId,
+        string memory district
+    ) public onlyOwner {
+        drivers[driverAddress] = Driver(name, vehicleId, district, true);
+
+        emit DriverRegistered(driverAddress, name, vehicleId, district);
+    }
+
+    function registerTrip(
+        address driverAddress,
+        uint256 distanceKm,
+        string memory route
+    ) public onlyOwner onlyRegisteredDriver(driverAddress) {
+        require(distanceKm > 0, "Distance must be greater than zero");
+
+        uint256 co2AvoidedPerKm = gasolineEmissionFactor - electricEmissionFactor;
+        uint256 co2Avoided = distanceKm * co2AvoidedPerKm;
+        uint256 tokensToIssue = co2Avoided;
+
+        totalTrips++;
+
+        trips[totalTrips] = Trip(
+            totalTrips,
+            driverAddress,
+            distanceKm,
+            co2Avoided,
+            tokensToIssue,
+            route,
+            block.timestamp
+        );
+
+        balances[driverAddress] += tokensToIssue;
+        totalCO2Avoided += co2Avoided;
+        totalTokensIssued += tokensToIssue;
+
+        emit TripRegistered(
+            totalTrips,
+            driverAddress,
+            distanceKm,
+            co2Avoided,
+            tokensToIssue
         );
     }
 
-    function obtenerViaje(uint256 _idViaje)
-        public
-        view
-        returns (
-            uint256,
-            string memory,
-            string memory,
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
-        Viaje memory v = viajes[_idViaje];
+    function retireTokens(uint256 amount, string memory reason) public {
+        require(balances[msg.sender] >= amount, "Insufficient token balance");
+
+        balances[msg.sender] -= amount;
+        totalTokensRetired += amount;
+
+        emit TokensRetired(msg.sender, amount, reason);
+    }
+
+    function getDriver(address driverAddress) public view returns (
+        string memory,
+        string memory,
+        string memory,
+        bool
+    ) {
+        Driver memory driver = drivers[driverAddress];
 
         return (
-            v.idViaje,
-            v.conductor,
-            v.distrito,
-            v.kmRecorridos,
-            v.co2Evitado,
-            v.tokensGenerados,
-            v.fechaRegistro
+            driver.name,
+            driver.vehicleId,
+            driver.district,
+            driver.registered
         );
     }
 
+    function getTrip(uint256 tripId) public view returns (
+        uint256,
+        address,
+        uint256,
+        uint256,
+        uint256,
+        string memory,
+        uint256
+    ) {
+        Trip memory trip = trips[tripId];
+
+        return (
+            trip.tripId,
+            trip.driver,
+            trip.distanceKm,
+            trip.co2Avoided,
+            trip.tokensIssued,
+            trip.route,
+            trip.timestamp
+        );
+    }
+
+    function getBalance(address user) public view returns (uint256) {
+        return balances[user];
+    }
 }
